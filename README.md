@@ -38,7 +38,37 @@ If you already have setup GCP via gcloud, you can skip this section
 * This will launch a browser and finish up the setup process
 * Back to the cli, select "Create New Project", and call it "automate-all-the-things"
 
+## Setup
+
+* `git clone https://github.com/Artemmkin/terraform-kubernetes.git`
+* Enable k8 in gcp - https://console.developers.google.com/apis/library/container.googleapis.com?project=automate-all-the-things&pli=1
+* Login to GCP and go to IAM > Service Accounts and create a terraform user > Owner
+* Click Create key at the end of this step and move the it to terraform/account.json file
+* `cd terraform`
+* `terraform init`
+* `terraform plan`
+* `terraform apply` - this took 6 and half minutes
+
+## Tear Down
 
 ## Resources used
 
 * http://artemstar.com/2018/01/15/cicd-with-kubernetes-and-gitlab/
+* https://www.terraform.io/docs/providers/google/r/container_cluster.html
+* https://cloud.google.com/iam/docs/creating-managing-service-account-keys#creating_service_account_keys
+
+
+## Common problems
+
+```
+Error: googleapi: Error 403: Kubernetes Engine API has not been used in project 184897089599 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/container.googleapis.com/overview?project=184897089599 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry., accessNotConfigured
+```
+* Enable billing for the account, and wait a few minutes for it to become active and make the terraform call again
+
+* Ensure you made a service account and not an IAM account for terraform
+
+## TODO
+
+* Write idempotent bash start script
+* Variablize out terraform
+* Find lower level for the service account then owner to perform terraform actions
