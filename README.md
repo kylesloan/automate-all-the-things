@@ -1,5 +1,5 @@
 # automate-all-the-things
-Learn some golang and gtc
+Learn some golang and GCP (google cloud compute)
 
 
 ## Problem Statement
