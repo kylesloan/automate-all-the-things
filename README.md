@@ -48,6 +48,12 @@ If you already have setup GCP via gcloud, you can skip this section
 * `terraform init`
 * `terraform plan`
 * `terraform apply` - this took 6 and half minutes
+* TODO explain how to setup golang
+* `cd ../code/`
+* `go build`
+* TODO docker build
+* TODO k8 deploy
+
 
 ## Tear Down
 
@@ -56,6 +62,7 @@ If you already have setup GCP via gcloud, you can skip this section
 * http://artemstar.com/2018/01/15/cicd-with-kubernetes-and-gitlab/
 * https://www.terraform.io/docs/providers/google/r/container_cluster.html
 * https://cloud.google.com/iam/docs/creating-managing-service-account-keys#creating_service_account_keys
+* https://tutorialedge.net/golang/creating-simple-web-server-with-golang/
 
 
 ## Common problems
@@ -69,6 +76,6 @@ Error: googleapi: Error 403: Kubernetes Engine API has not been used in project 
 
 ## TODO
 
-* Write idempotent bash start script
+* Write idempotent bash start script to wrap all this and skip gcp setup of terraform if user has an existing k8 setup
 * Variablize out terraform
 * Find lower level for the service account then owner to perform terraform actions
