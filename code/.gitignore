@@ -1,4 +1,5 @@
 # https://github.com/github/gitignore/blob/master/Go.gitignore
+*.bin
 
 # Binaries for programs and plugins
 *.exe
