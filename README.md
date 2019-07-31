@@ -19,15 +19,20 @@ The application must be deployed on a Kubernetes cluster running in a public clo
 * terraform (0.12.5)
 * GCP account (new accounts get $300 free credit at this time) - https://console.cloud.google.com/
 * gcloud (google-cloud-sdk) cli tool
+* golang (1.12.7)
+* kubernetes-cli 1.15.1
+
 
 ### If Mac as work station
 
 If you are using a mac, you can use the following commands to get the prerequisites in place quickly.
 
 * Install home brew: https://brew.sh `/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-* Install terraform via brew `brew install terraform` or upgrade if already installed `brew upgrade terraform`
 * Install git via brew `brew install git` or upgrade if already installed `brew upgrade git`
+* Install terraform via brew `brew install terraform` or upgrade if already installed `brew upgrade terraform`
 * Install gcloud via brew `brew cask install google-cloud-sdk` or upgrade if already installed `brew cask upgrade google-cloud-sdk`
+* Install golang via brew `brew install golang` or upgrade if already installed `brew upgrade golang`
+* Install kubectl via brew `brew install kubernetes-cli` or upgrade if already installed `brew upgrade kubernetes-cli`
 
 ### If setting up gcloud for the first time
 
@@ -40,22 +45,32 @@ If you already have setup GCP via gcloud, you can skip this section
 
 ## Setup
 
-* `git clone https://github.com/Artemmkin/terraform-kubernetes.git`
-* Enable k8 in gcp - https://console.developers.google.com/apis/library/container.googleapis.com?project=automate-all-the-things&pli=1
-* Login to GCP and go to IAM > Service Accounts and create a terraform user > Owner
+* `git clone https://github.com/kylesloan/automate-all-the-things.git`
+* Enable k8 in gcp - https://console.developers.google.com/apis/library/container.googleapis.com?
+* Login to GCP and go to IAM > Service Accounts and create a terraform user with Owner permissions
 * Click Create key at the end of this step and move the it to terraform/account.json file
-* `cd terraform`
+* `cd $PATH_TO_CHECKOUT/terraform/`
 * `terraform init`
-* `terraform plan`
 * `terraform apply` - this took 6 and half minutes
-* TODO explain how to setup golang
-* `cd ../code/`
-* `go build`
-* TODO docker build
-* TODO k8 deploy
+* `cd $PATH_TO_CHECKOUT/code/`
+* `env GOOS=linux GOARCH=amd64 go build -o code.bin main.go` - need the linux/amd64 to run properly in gcp
+* `docker login` if not already logged into docker hub
+* `docker build -t kylesloan/automate-all-the-things:latest .`
+* `docker tag automate-all-the-things:latest kylesloan/automate-all-the-things:latest` - TODO determine the user repo that they pushed to
+* `docker push kylesloan/automate-all-the-things:latest`
+* `cd $PATH_TO_CHECKOUT/k8/`
+* `kubectl apply -f deploy.yml` - TODO this needs the proper username from the hub
+* `kubectl apply -f service.yml`
+* `kubectl apply -f ingress.yml`
+* `kubectl get ingress -o wide` - you can run this under watch and wait until you see the IP address appear, this took several minutes even after kubectl said it had assigned the ip to no longer get GCP error page
+* `curl -iL $IP_FROM_PREVIOUS_COMMAND`
+
 
 
 ## Tear Down
+
+* `cd ~/$CHECKOUT_PATH/terraform`
+* `terraform destroy` - this took about 7 minutes
 
 ## Resources used
 
@@ -63,6 +78,8 @@ If you already have setup GCP via gcloud, you can skip this section
 * https://www.terraform.io/docs/providers/google/r/container_cluster.html
 * https://cloud.google.com/iam/docs/creating-managing-service-account-keys#creating_service_account_keys
 * https://tutorialedge.net/golang/creating-simple-web-server-with-golang/
+* https://www.digitalocean.com/community/tutorials/how-to-build-go-executables-for-multiple-platforms-on-ubuntu-16-04#step-4-—-building-executables-for-different-architectures
+* https://cloud.google.com/kubernetes-engine/docs/concepts/ingress
 
 
 ## Common problems
@@ -74,8 +91,15 @@ Error: googleapi: Error 403: Kubernetes Engine API has not been used in project 
 
 * Ensure you made a service account and not an IAM account for terraform
 
+## gcloud debugging commands
+
+* `gcloud container clusters list`
+* `gcloud container clusters get-credentials my-gke-cluster --region us-central1`
+* `kubectl config current-context
+
 ## TODO
 
 * Write idempotent bash start script to wrap all this and skip gcp setup of terraform if user has an existing k8 setup
 * Variablize out terraform
 * Find lower level for the service account then owner to perform terraform actions
+* monitoring/metrics/graphing
