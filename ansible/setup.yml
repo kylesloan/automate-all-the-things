@@ -36,20 +36,16 @@
     when: docker_hub_name|length < 3
 
   # to get this far, git and ansible have to already been installed so the shell wrapper needs to have the checks there, not here
-  - name: check prerequisite are in the path
-    block:
-      - name: check for prerequisites on cli $PATH
-        changed_when: false
-        command: which {{ item.name }}
-        loop:
-          - { name: 'docker' }
-          - { name: 'gcloud' }
-          - { name: 'go' }
-          - { name: 'kubectl' }
-          - { name: 'terraform' }
-    rescue:
-    - debug:
-        msg: "A prerequisite was not found in your path, please add it and run once again."
+  - name: check for prerequisites on cli $PATH, if a failure please try to brew/yum/apt-get install the package
+    changed_when: false
+    command: which {{ item.name }}
+    loop:
+      - { name: 'docker' }
+      - { name: 'gcloud' }
+      - { name: 'go' }
+      - { name: 'kubectl' }
+      - { name: 'terraform' }
+      - { name: 'foo' }
 # TODO ansible_failed_result - https://docs.ansible.com/ansible/latest/user_guide/playbooks_blocks.html, can we tell the user the exact item that failed?
 
 #  - name: verify GCP json account information
