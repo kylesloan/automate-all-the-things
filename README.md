@@ -79,7 +79,7 @@ If you already have setup GCP via gcloud, you can skip this section
 * https://cloud.google.com/iam/docs/creating-managing-service-account-keys#creating_service_account_keys
 * https://tutorialedge.net/golang/creating-simple-web-server-with-golang/
 * https://www.digitalocean.com/community/tutorials/how-to-build-go-executables-for-multiple-platforms-on-ubuntu-16-04#step-4-—-building-executables-for-different-architectures
-* https://cloud.google.com/kubernetes-engine/docs/concepts/ingress
+* https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer
 
 
 ## Common problems
@@ -91,11 +91,17 @@ Error: googleapi: Error 403: Kubernetes Engine API has not been used in project 
 
 * Ensure you made a service account and not an IAM account for terraform
 
+```
+Failed to import the required Python library (openshift) on imac-6.local's Python /usr/local/Cellar/ansible/2.8.3/libexec/bin/python3.7. Please read module documentation and install in the appropriate location
+```
+* https://docs.ansible.com/ansible/latest/modules/k8s_module.html#requirements
+
 ## gcloud debugging commands
 
 * `gcloud container clusters list`
 * `gcloud container clusters get-credentials my-gke-cluster --region us-central1`
-* `kubectl config current-context
+* `kubectl config current-context`
+* `kubectl run -i --tty ubuntu --image=ubuntu:16.04 --restart=Never -- bash -il` - `apt update && apt install -y curl iputils-ping host`
 
 ## TODO
 
