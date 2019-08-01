@@ -1,7 +1,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: basic-ingress
+  name: automate-all-the-things-ingress
 spec:
   backend:
     serviceName: automate-all-the-things

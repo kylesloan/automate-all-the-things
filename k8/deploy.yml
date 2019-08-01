@@ -14,21 +14,10 @@ spec:
       labels:
         location: prd
         app: automate-all-the-things
-      annotations:
-        prometheus.io/scrape: 'true'
-        prometheus.io/port: '9117'
     spec:
       containers:
-
       - name: automate-all-the-things
         image: kylesloan/automate-all-the-things:latest
         ports:
         - containerPort: 8081
         imagePullPolicy: Always
-
-#      # https://hub.docker.com/r/mradamczyk/apache_exporter/
-#      - name: metrics
-#        image: solsson/prometheus-exporter-apache
-#        ports:
-#        - containerPort: 9117
-#        imagePullPolicy: Always

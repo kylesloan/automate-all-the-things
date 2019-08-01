@@ -1,9 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: automate-all-the-things
+  name: automate-all-the-things-service
+  namespace: default
   labels:
-    app: automate-all-the-things
+    app: automate-all-the-things-service
     location: prd
 spec:
   ports:
@@ -11,3 +12,4 @@ spec:
   selector:
     location: prd
     app: automate-all-the-things
+  type: NodePort
