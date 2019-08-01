@@ -45,7 +45,6 @@
       - { name: 'go' }
       - { name: 'kubectl' }
       - { name: 'terraform' }
-      - { name: 'foo' }
 # TODO ansible_failed_result - https://docs.ansible.com/ansible/latest/user_guide/playbooks_blocks.html, can we tell the user the exact item that failed?
 
 #  - name: verify GCP json account information
