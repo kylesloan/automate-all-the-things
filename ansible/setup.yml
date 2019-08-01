@@ -36,7 +36,7 @@
     when: docker_hub_name|length < 3
 
   # to get this far, git and ansible have to already been installed so the shell wrapper needs to have the checks there, not here
-  - name: check for prerequisites on cli $PATH, if a failure please try to brew/yum/apt-get install the package
+  - name: Check for prerequisites on cli $PATH. If a failure, please see the README.md Prerequisites area or try a brew/yum/apt-get install
     changed_when: false
     command: which {{ item.name }}
     loop:
