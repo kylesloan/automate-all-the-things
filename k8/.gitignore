@@ -1,2 +1,2 @@
-# ignore this as ansible makes this file each run
-deploy.yml
+# ignore all as ansible makes these files each run
+*.yml
