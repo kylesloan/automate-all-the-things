@@ -1,12 +1,22 @@
 ---
+# This play will
+#  setup a k8 cluster in GCP
+#  build a golang binary
+#  config and deploy a container that will return the current time from golang
+
+# it requires
+#  configuring gcloud
+#  creating a gcp project
+#  enabling k8 creation for the project
+#  creating an iam service acccount and configuring the key
+
 - hosts: localhost
 
-  vars_prompt:
+  vars_files:
+    - vars.yml
 
-  - name: have_gcp_account
-    prompt: Do you have a Google Cloud Platform (GCP) account already and gcloud on the CLI configured? (yes|no)?
-    default: "yes"
-    private: no
+
+  vars_prompt:
 
   - name: have_dockerhub_account
     prompt: Do you have a Docker Hub account and are logged in with "docker login" on the cli (yes|no)?
@@ -14,16 +24,21 @@
     private: no
 
   - name: docker_hub_name
-    prompt: What is your docker hub name? Determine this by going to https://hub.docker.com and it will be in the top right corner.
+    prompt: What is your docker hub name? Determine this by going to https://hub.docker.com and it will be in the top right corner
     private: no
+
 
   tasks:
 
-  # TODO more direction needed here for making the service account
-  - name: verify answer for have_gcp_account
+  - name: try to locate GCP creds file
+    changed_when: false
+    register: gcp_creds
+    shell: "echo $GOOGLE_APPLICATION_CREDENTIALS"
+
+  - name: verify a GCP login file exists, if not please go to https://cloud.google.com/docs/authentication/getting-started#creating_a_service_account and follow directions, more info in README of this project
     fail:
-      msg: Please go to https://console.developers.google.com/ and create one
-    when: have_gcp_account != "yes"
+      msg: please go to https://cloud.google.com/docs/authentication/getting-started#creating_a_service_account
+    when: gcp_creds.stdout|length == 0
 
   - name: verify answer for have_dockerhub_account
     fail:
@@ -45,9 +60,16 @@
       - { name: 'go' }
       - { name: 'kubectl' }
       - { name: 'terraform' }
-# TODO ansible_failed_result - https://docs.ansible.com/ansible/latest/user_guide/playbooks_blocks.html, can we tell the user the exact item that failed?
+  # TODO ansible_failed_result - https://docs.ansible.com/ansible/latest/user_guide/playbooks_blocks.html, can we tell the user the exact item that failed?
 
-#  - name: verify GCP json account information
+  - name: create custom terraform file based on project name
+    template:
+      src=templates/terraform/{{ item.file }}.tf.j2
+      dest=../terraform/{{ item.file }}.tf
+    delegate_to: localhost
+    with_items:
+      - { file: 'main' }
+    tags: terraform
 
   # http://www.mydailytutorials.com/working-date-timestamp-ansible/
   # tell user the time as the next command can take a long while
@@ -55,10 +77,11 @@
     debug:
       var=ansible_date_time.time
 
-  - name: run terraform to setup GCP k8 cluster, THIS COMMAND TAKES UP TO 8 MINUTES, if it fails please ensure the service account in terraform/account.json has enough rights to create gcp kubernetes clusters
+  - name: "run terraform to setup GCP k8 cluster, THIS COMMAND TAKES UP TO 10 MINUTES. If this fails please ensure that you enabled the Kubernetes Engine for this project: https://console.cloud.google.com/kubernetes/list and wait until GCP says it is ready in the GUI AND have ran the steps to create a new service account with Owner privileges https://cloud.google.com/docs/authentication/getting-started#creating_a_service_account and create the key"
     terraform:
       project_path: '../terraform/'
       state: present
+    tags: slow
 
   # no built in ansible modules for golang, didn't check for quality of galaxy
   # TODO this is not idempodent, what is the cleanest thing we can do here, md5sum check?
@@ -70,32 +93,39 @@
     docker_image:
       build:
         path: ../code/
-      name: kylesloan/automate-all-the-things
+      name: "{{ docker_hub_name}}/{{ project_name }}"
       tag: latest
       push: yes
       source: build
+    tags: docker
 
   # TODO is there ansible gcloud module?
+  # how can we get this if terraform made everything for us?
   - name: load new cluster into profile
-    command: gcloud container clusters get-credentials my-gke-cluster --region us-central1
+    command: "gcloud --project {{ project_name }} container clusters get-credentials {{ project_name }} --region {{ project_location }}"
     changed_when: false
 
-  - name: create custom deployment.yml for k8 with docker hub account
+  - name: create custom deployment.yml for k8 with docker hub account and name of project
     template:
-      src=deploy.yml.j2
-      dest=../k8/deploy.yml
+      src=templates/k8/{{ item.file }}.yml.j2
+      dest=../k8/{{ item.file }}.yml
     delegate_to: localhost
+    with_items:
+      - { file: 'deploy' }
+      - { file: 'service' }
+      - { file: 'ingress' }
+    tags: kas
 
   # TODO pip install openshift
   # this seems to be a bug, even after installing and running a command: pip list, i can see openshift is installed and ansible is using it
   # so go with regular command at this point
   - name: run kubenetes deployment yamls
     changed_when: false
-    command: kubectl apply -f ../k8/{{ item.file }}
+    command: kubectl apply -f ../k8/{{ item.file }}.yml
     with_items:
-      - { file: 'deploy.yml' }
-      - { file: 'service.yml' }
-      - { file: 'ingress.yml' }
+      - { file: 'deploy' }
+      - { file: 'service' }
+      - { file: 'ingress' }
 
   - name: the time is now
     debug:
@@ -104,15 +134,17 @@
   - name: see if the ingress load balancer exists from a previous run and already has an IP
     changed_when: false
     register: r
-    raw: "kubectl get ingress automate-all-the-things-ingress --output jsonpath='{.status.loadBalancer.ingress[0].ip}'"
+    raw: "kubectl get ingress {{ project_name }} --output jsonpath='{.status.loadBalancer.ingress[0].ip}'"
 
+  # ideally this should poll instead of flat sleeping
   - name: sleep for a bit and try to get the GCP public IP for the new load balancer, this process takes a long time, even after the IP is allocated, it takes another few minutes to reach the cluster, SLEEP 3 MINS
     when: r.stdout == ""
     changed_when: false
     register: r2
-    raw: "sleep 180; kubectl get ingress automate-all-the-things-ingress --output jsonpath='{.status.loadBalancer.ingress[0].ip}'"
+    raw: "sleep 180; kubectl get ingress {{ project_name }} --output jsonpath='{.status.loadBalancer.ingress[0].ip}'"
+    tags: slow
 
-  - name: "GCP load balancer creation can take up to 15 minutes to add the IP address and properly sync with the k8 cluster, here is the command that should end up working.  You might want to login to GCP console and go to Kube Engine: Services & Ingress to monitor how the load balancer is progressing"
+  - name: "GCP load balancer creation can take up to 15 minutes to add the IP address and properly sync with the k8 cluster, here is the command that should end up working.  You might want to login to GCP console and go to Kube Engine: Services & Ingress to monitor how the load balancer is progressing.  Some backend services are in UNKNOWN state is not uncommon and will take some time to start working"
     debug: msg="curl -iL http://{% if r2.stdout is defined %}{{ r2.stdout }}{% else %}{{ r.stdout }}{% endif %}/"
 
   - name: Debug directions while you wait for GCP to finish the Ingress Load balancer setup, launch another container into the cluster and curl the service
@@ -122,4 +154,4 @@
     debug: msg="apt update && apt install -y curl iputils-ping host"
 
   - name: curl the service internally
-    debug: msg="curl -iL automate-all-the-things-service:8081"
+    debug: msg="curl -iL {{ project_name }}:8081"

@@ -1,0 +1,8 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ project_name }}
+spec:
+  backend:
+    serviceName: {{ project_name }}
+    servicePort: 8081

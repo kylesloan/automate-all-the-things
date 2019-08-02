@@ -1,0 +1,27 @@
+---
+- hosts: localhost
+
+  vars_prompt:
+
+  - name: confirm_destroy
+    prompt: Are you sure you wish to destroy the cluster? Please note this will not destroy the Project in GCP.
+    default: "yes"
+    private: no
+
+  tasks:
+
+  - name: Confirm destroy is yes
+    fail:
+      msg: Aborting
+    when: confirm_destroy != "yes"
+
+  # http://www.mydailytutorials.com/working-date-timestamp-ansible/
+  # tell user the time as the next command can take a long while
+  - name: the time is now
+    debug:
+      var=ansible_date_time.time
+
+  - name: run terraform to destroy GCP k8 cluster, THIS COMMAND TAKES UP TO 7 MINUTES
+    terraform:
+      project_path: '../terraform/'
+      state: absent

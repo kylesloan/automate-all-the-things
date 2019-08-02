@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: automate-all-the-things
+  name: {{ project_name }}
   namespace: default
 spec:
   selector:
     matchLabels:
       location: prd
-      app: automate-all-the-things
+      app: {{ project_name }}
   replicas: 2
   template:
     metadata:
       labels:
         location: prd
-        app: automate-all-the-things
+        app: {{ project_name }}
     spec:
       containers:
-      - name: automate-all-the-things
-        image: {{ docker_hub_name }}/automate-all-the-things:latest
+      - name: {{ project_name }}
+        image: {{ docker_hub_name }}/{{ project_name }}:latest
         ports:
         - containerPort: 8081
         imagePullPolicy: Always

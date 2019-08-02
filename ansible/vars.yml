@@ -1,0 +1,7 @@
+---
+# please keep name to less then 30 chars, integers, underscores or dashes, so says the google overlords of naming
+# if you already made and deleted this project, you need to use a new name to not confuse GCP and terraform
+project_name: "automate-all-the-things-4"
+
+# location to make the k8 cluster
+project_location: "us-central1"
