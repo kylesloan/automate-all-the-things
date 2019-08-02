@@ -13,6 +13,19 @@ Build an application in the programming language of your choice that exposes a R
 ```
 The application must be deployed on a Kubernetes cluster running in a public cloud provider of your choice. The provisioning of the cluster as well as the deployment of the application must be done through code.
 
+## TL;DR steps to get started
+
+* Browser - Login/Create GCP account: https://console.cloud.google.com/
+* Browser - Create a project called "automate-all-the-things" (top middle area) and Select Project
+* Browser - Navigate to Kubernetes Engine and Enable the API (takes a few minutes): https://console.cloud.google.com/kubernetes
+* Browser - Create a new Service Account under IAM section.  Name is not important, give Owner role, and Create key.  Move this file to ~/.gcp-serviceaccount.
+* CLI - add `export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.gcp-serviceaccount"` to .bash_profile/.zsh_rc and then `source` the file
+* CLI - install the cli required tools (on a mac `brew install ansible git terraform golang kubernetes-cli && brew cask install google-cloud-sdk`)
+* Browser - Verify you are logged into docker hub: https://hub.docker.com, if not run `docker login` on the command line
+* CLI - setup gcloud `gcloud init` and make "automate-all-the-things" the default project
+* CLI - clone this repo `git clone https://github.com/kylesloan/automate-all-the-things.git`
+* CLI - `cd automate-all-the-things && ansible-playbook ansible/setup-playbook.yml`
+
 ## Prerequisites and the specific version used while building out this app
 
 * git (2.22.0_1)
@@ -21,6 +34,8 @@ The application must be deployed on a Kubernetes cluster running in a public clo
 * gcloud (google-cloud-sdk) cli tool
 * golang (1.12.7)
 * kubernetes-cli 1.15.1
+
+* Perform https://cloud.google.com/docs/authentication/getting-started#creating_a_service_account
 
 
 ### If Mac as work station
@@ -33,6 +48,10 @@ If you are using a mac, you can use the following commands to get the prerequisi
 * Install gcloud via brew `brew cask install google-cloud-sdk` or upgrade if already installed `brew cask upgrade google-cloud-sdk`
 * Install golang via brew `brew install golang` or upgrade if already installed `brew upgrade golang`
 * Install kubectl via brew `brew install kubernetes-cli` or upgrade if already installed `brew upgrade kubernetes-cli`
+
+```
+brew install git terraform golang kubernetes-cli && brew cask install google-cloud-sdk
+```
 
 ### If setting up gcloud for the first time
 
@@ -69,8 +88,7 @@ If you already have setup GCP via gcloud, you can skip this section
 
 ## Tear Down
 
-* `cd ~/$CHECKOUT_PATH/terraform`
-* `terraform destroy` - this took about 7 minutes
+* `ansible-playbook ansible/destroy-playbook.yml`
 
 ## Resources used
 
@@ -80,6 +98,7 @@ If you already have setup GCP via gcloud, you can skip this section
 * https://tutorialedge.net/golang/creating-simple-web-server-with-golang/
 * https://www.digitalocean.com/community/tutorials/how-to-build-go-executables-for-multiple-platforms-on-ubuntu-16-04#step-4-—-building-executables-for-different-architectures
 * https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer
+* https://cloud.google.com/docs/authentication/getting-started#creating_a_service_account
 
 
 ## Common problems
@@ -105,7 +124,6 @@ Failed to import the required Python library (openshift) on imac-6.local's Pytho
 
 ## TODO
 
-* Write idempotent bash start script to wrap all this and skip gcp setup of terraform if user has an existing k8 setup
-* Variablize out terraform
+* Add http header to gocode to tell which container/hostOS returned the values
 * Find lower level for the service account then owner to perform terraform actions
 * monitoring/metrics/graphing
