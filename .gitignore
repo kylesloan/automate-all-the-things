@@ -1,6 +1,3 @@
-# don't want to commit keys to the repo
-terraform/account.json
-
 #  Local .terraform directories
 **/.terraform/*
 
