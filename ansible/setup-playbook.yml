@@ -64,8 +64,9 @@
 
   - name: create custom terraform file based on project name
     template:
-      src=templates/terraform/{{ item.file }}.tf.j2
-      dest=../terraform/{{ item.file }}.tf
+      src: templates/terraform/{{ item.file }}.tf.j2
+      dest: ../terraform/{{ item.file }}.tf
+      force_init: yes
     delegate_to: localhost
     with_items:
       - { file: 'main' }
