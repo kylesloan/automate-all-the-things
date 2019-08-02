@@ -94,6 +94,7 @@
     docker_image:
       build:
         path: ../code/
+        pull: yes
       name: "{{ docker_hub_name}}/{{ project_name }}"
       tag: latest
       push: yes
