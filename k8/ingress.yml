@@ -1,8 +1,0 @@
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: automate-all-the-things-ingress
-spec:
-  backend:
-    serviceName: automate-all-the-things
-    servicePort: 8081
