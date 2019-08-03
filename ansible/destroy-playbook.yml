@@ -1,19 +1,35 @@
 ---
 - hosts: localhost
 
+  vars_files:
+    - vars.yml
+
+
   vars_prompt:
 
-  - name: confirm_destroy
-    prompt: Are you sure you wish to destroy the cluster? Please note this will not destroy the Project in GCP.
+  - name: confirm_destroy_docker_images
+    prompt: Are you sure you wish to destroy the local docker images for code and testing?
     default: "yes"
     private: no
 
+  - name: confirm_destroy_gcp_k8
+    prompt: Are you sure you wish to destroy the cluster? Please note this will not destroy the Project in GCP, or the service account.
+    default: "yes"
+    private: no
+
+
   tasks:
 
-  - name: Confirm destroy is yes
-    fail:
-      msg: Aborting
-    when: confirm_destroy != "yes"
+  - name: destroy docker images
+    when: confirm_destroy_docker_images == "yes"
+    docker_image:
+      name: "{{ item.name }}"
+      state: absent
+      force_absent: yes
+    with_items:
+      - { name: "{{ project_name }}-goss" }
+      - { name: "{{ project_name }}" }
+    tags: docker
 
   # http://www.mydailytutorials.com/working-date-timestamp-ansible/
   # tell user the time as the next command can take a long while
@@ -21,7 +37,8 @@
     debug:
       var=ansible_date_time.time
 
-  - name: run terraform to destroy GCP k8 cluster, THIS COMMAND TAKES UP TO 7 MINUTES
+  - name: run terraform to destroy GCP k8 cluster, THIS COMMAND TAKES UP TO 10 MINUTES
+    when: confirm_destroy_gcp_k8 == "yes"
     terraform:
       project_path: '../terraform/'
       state: absent
