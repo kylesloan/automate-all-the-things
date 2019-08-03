@@ -189,6 +189,12 @@
       force_source: yes
     tags: [docker,goss]
 
+  - name: write goss container name out so magefile can use it later
+    copy:
+     content: "{{ project_name }}-goss"
+     dest: ../goss/container_name.txt
+    tags: [goss]
+
   # detach argument is important else this is "successful" as it just goes into daemon mode
   # https://docs.ansible.com/ansible/latest/modules/docker_container_module.html
   - name: run goss check to see when gcp has configured the load balancer
