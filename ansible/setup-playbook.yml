@@ -18,6 +18,12 @@
 
   vars_prompt:
 
+  - name: have_read_readme
+    prompt: Did you follow the steps to setup GCP, k8 enabled and create a service account as found in the README under "Steps to get started"?
+    default: "yes"
+    private: no
+    tags: prompt
+
   - name: have_dockerhub_account
     prompt: Do you have a Docker Hub account and are logged in with "docker login" on the cli (yes|no)?
     default: "yes"
@@ -51,6 +57,11 @@
     fail:
       msg: Please go to https://hub.docker.com to determine your username.
     when: docker_hub_name|length < 3
+
+  - name: verify answer for read the readme
+    fail:
+      msg: Please ensure all steps from the "Steps to get started" of the README are completed before continuing with this script.
+    when: have_read_readme != "yes"
 
   # to get this far, git and ansible have to already been installed so the shell wrapper needs to have the checks there, not here
   - name: Check for prerequisites on cli $PATH. If a failure, please see the README.md Prerequisites area or try a brew/yum/apt-get install
