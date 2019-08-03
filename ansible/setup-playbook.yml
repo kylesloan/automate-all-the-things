@@ -22,10 +22,12 @@
     prompt: Do you have a Docker Hub account and are logged in with "docker login" on the cli (yes|no)?
     default: "yes"
     private: no
+    tags: prompt
 
   - name: docker_hub_name
     prompt: What is your docker hub name? Determine this by going to https://hub.docker.com and it will be in the top right corner
     private: no
+    tags: prompt
 
 
   tasks:
@@ -116,7 +118,6 @@
       - { file: 'deploy' }
       - { file: 'service' }
       - { file: 'ingress' }
-    tags: kas
 
   # TODO pip install openshift
   # this seems to be a bug, even after installing and running a command: pip list, i can see openshift is installed and ansible is using it
@@ -137,14 +138,22 @@
     changed_when: false
     register: r
     raw: "kubectl get ingress {{ project_name }} --output jsonpath='{.status.loadBalancer.ingress[0].ip}'"
+    tags: [goss]
 
   # ideally this should poll instead of flat sleeping
+  # seems like goss might be able to do this, but we would need to inject kube config in to reach the cluster
   - name: sleep for a bit and try to get the GCP public IP for the new load balancer, this process takes a long time, even after the IP is allocated, it takes another few minutes to reach the cluster, SLEEP 3 MINS
     when: r.stdout == ""
     changed_when: false
     register: r2
     raw: "sleep 180; kubectl get ingress {{ project_name }} --output jsonpath='{.status.loadBalancer.ingress[0].ip}'"
-    tags: slow
+    tags: [slow,goss]
+
+  - name: assign the public ip to a variable
+    changed_when: false
+    register: ingress_ip
+    command: "echo {% if r2.stdout is defined %}{{ r2.stdout }}{% else %}{{ r.stdout }}{% endif %}"
+    tags: [goss]
 
   - name: "GCP load balancer creation can take up to 15 minutes to add the IP address and properly sync with the k8 cluster, here is the command that should end up working.  You might want to login to GCP console and go to Kube Engine: Services & Ingress to monitor how the load balancer is progressing.  Some backend services are in UNKNOWN state is not uncommon and will take some time to start working"
     debug: msg="curl -iL http://{% if r2.stdout is defined %}{{ r2.stdout }}{% else %}{{ r.stdout }}{% endif %}/"
@@ -157,3 +166,35 @@
 
   - name: curl the service internally
     debug: msg="curl -iL {{ project_name }}:8081"
+
+  - name: create goss file with http checks
+    template:
+      src: templates/goss/{{ item.file }}.yaml.j2
+      dest: ../goss/{{ item.file }}.yaml
+    delegate_to: localhost
+    with_items:
+      - { file: 'goss' }
+    tags: goss
+
+  # force_source required to rebuild the image, else it just keeps the old image
+  - name: build the goss container
+    docker_image:
+      build:
+        path: ../goss/
+        pull: yes
+      name: "{{ project_name }}-goss"
+      tag: latest
+      push: no
+      source: build
+      force_source: yes
+    tags: [docker,goss]
+
+  # detach argument is important else this is "successful" as it just goes into daemon mode
+  # https://docs.ansible.com/ansible/latest/modules/docker_container_module.html
+  - name: run goss check to see when gcp has configured the load balancer
+    register: goss
+    docker_container:
+      detach: no
+      name: "{{ project_name }}-goss"
+      image: "{{ project_name }}-goss"
+    tags: [docker,goss]

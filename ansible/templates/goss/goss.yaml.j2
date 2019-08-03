@@ -1,0 +1,8 @@
+http:
+  http://{{ ingress_ip.stdout }}:
+    status: 200
+    allow-insecure: false
+    no-follow-redirects: false
+    timeout: 5000
+    body:
+      - 'Automate all the things!'
