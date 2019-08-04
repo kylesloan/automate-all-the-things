@@ -71,6 +71,7 @@ Single commands
 * https://cloud.google.com/kubernetes-engine/docs/tutorials/http-balancer
 * https://cloud.google.com/docs/authentication/getting-started#creating_a_service_account
 * https://magefile.org
+* https://austincloud.guru/2019/01/preparing-google-cloud-for-terraform/
 
 
 ## Common problems
