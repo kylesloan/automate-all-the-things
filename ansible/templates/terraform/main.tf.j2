@@ -1,13 +1,12 @@
 # https://www.terraform.io/docs/providers/google/r/container_cluster.html
 provider "google" {
   version = "~> 2.11"
-  project = "{{ project_name }}"
+  project = "{{ project_id }}"
 }
 
 resource "google_container_cluster" "{{ project_name }}" {
   name     = "{{ project_name }}"
   location = "{{ project_location }}"
-  project  = "{{ project_name }}"
 
   # We can't create a cluster with no node pool defined, but we want to only use
   # separately managed node pools. So we create the smallest possible default

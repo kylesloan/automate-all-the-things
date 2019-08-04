@@ -24,6 +24,11 @@
     private: no
     tags: prompt
 
+  - name: project_id
+    prompt: Provide the gcp project ID, not to be confused with the project name
+    private: no
+    tags: prompt
+
   - name: have_dockerhub_account
     prompt: Do you have a Docker Hub account and are logged in with "docker login" on the cli?
     default: "yes"
@@ -57,6 +62,11 @@
     fail:
       msg: Please go to https://hub.docker.com to determine your username.
     when: docker_hub_name|length < 3
+
+  - name: verify answer for project_id
+    fail:
+      msg: Please go to the GCP console to determine the project ID
+    when: project_id|length < 3
 
   - name: verify answer for read the readme
     fail:
@@ -117,7 +127,7 @@
   # TODO is there ansible gcloud module?
   # how can we get this if terraform made everything for us?
   - name: load new cluster into profile
-    command: "gcloud --project {{ project_name }} container clusters get-credentials {{ project_name }} --region {{ project_location }}"
+    command: "gcloud --project {{ project_id }} container clusters get-credentials {{ project_name }} --region {{ project_location }}"
     changed_when: false
 
   - name: create custom deployment.yml for k8 with docker hub account and name of project
