@@ -14,8 +14,14 @@ Build an application in the programming language of your choice that exposes a R
 ```
 The application must be deployed on a Kubernetes cluster running in a public cloud provider of your choice. The provisioning of the cluster as well as the deployment of the application must be done through code.
 
+## What this does
+
+This repo will stand up a kubernetes deployment in GCP (google cloud compute), and create a deployment with a simple golang container.  This container returns a basic sentance and the unix epoc time in a json format.  A goss test is also generated to validate the end point is up and returning values.  The cleanup process will shutdown the kube cluster, and delete the local docker images made for both the unix epoc container and the goss testing container.
+
 
 ## Steps to get started
+
+Check out the youtube video that helps guide you through setup: https://youtu.be/yowbZB6IOb0
 
 * Browser - Login/Create GCP account: https://console.cloud.google.com/
 * Browser - Create a project called "automate-all-the-things" (top middle area) and Select Project
@@ -28,18 +34,22 @@ The application must be deployed on a Kubernetes cluster running in a public clo
 * Browser - Verify that GCP has no more "activity" in the top right and that the K8 cluster is ready.  You should see a bell and not a rotating counter.
 * CLI - clone this repo `git clone https://github.com/kylesloan/automate-all-the-things.git`
 * Optional - If you used a different name them "automate-all-the-things", please update ansible/vars.yml file.
-* CLI - `mage setup` - to create the enviroment, and run tests.  Please note that GCP says it is "done" but it takes several more minutes for the load balancer to really start working.  Commands are given to launch an internal container in the cluster to do tests while you wait.
+* CLI - `mage setup` - to create the enviroment, and run tests.  Please note that GCP says it is "done" but it takes several more minutes for the load balancer to really start working.  Commands are given to launch an internal container in the cluster to do tests while you wait. If you are running on a different OS then macOS, you will need to install magefile (https://magefile.org) for your OS.
 * CLI - `mage test` - will run a test to hit the cool new service container.  This is also run at the end of `mage setup`
-* CLI - `mage destroy` - will shutdown most everything created.  For maximum cleanup, you will want to destroy the project in GCP as well.
+* CLI - `mage destroy` - will shutdown most everything created by automation.  For maximum cleanup, you will want to destroy the project in GCP as well.  Objects made manually from the directions above are not removed by the destroy command.
 
 
 ## Specific version used while building out this app
 
+* ansible (2.8.3)
 * git (2.22.0_1)
 * terraform (0.12.5)
 * gcloud (google-cloud-sdk) cli tool
 * golang (1.12.7)
 * kubernetes-cli 1.15.1
+* magefile (v1.8.0-15-ge1fda1a)
+* macOS (10.14.5)
+* docker (19.03.1)
 
 
 ### If Mac as work station
@@ -59,6 +69,12 @@ Single commands
 * Install gcloud via brew `brew cask install google-cloud-sdk` or upgrade if already installed `brew cask upgrade google-cloud-sdk`
 * Install golang via brew `brew install golang` or upgrade if already installed `brew upgrade golang`
 * Install kubectl via brew `brew install kubernetes-cli` or upgrade if already installed `brew upgrade kubernetes-cli`
+
+
+### If not mac work station
+
+* You will need to apt/yum/apk etc the packages above.  The setup script will validate it can reach all these packages on the CLI before continuing.
+* Install https://magefile.org
 
 
 ## Resources used
@@ -131,8 +147,7 @@ Some commands to debug and test kube cluster with
 
 * Find lower level for the service account then owner to perform terraform actions
 * monitoring/metrics/graphing
-* ensure project name and ID exist so random blow ups are less frequent
 * find way to get user's docker hub account, not in the file like other posts suggest: https://docs.docker.com/engine/reference/commandline/login/#credentials-store
 * mage should detect and download the proper binary when not used on macOS
-* not a good way to determine what FROM docker bases were created in this process and what ones user already had on their system
+* not a good way to determine what FROM docker bases were created in this process and what ones user already had on their system for cleanup
 * delete items pushes to docker hub
