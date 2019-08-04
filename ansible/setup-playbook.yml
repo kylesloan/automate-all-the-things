@@ -25,7 +25,7 @@
     tags: prompt
 
   - name: have_dockerhub_account
-    prompt: Do you have a Docker Hub account and are logged in with "docker login" on the cli (yes|no)?
+    prompt: Do you have a Docker Hub account and are logged in with "docker login" on the cli?
     default: "yes"
     private: no
     tags: prompt
